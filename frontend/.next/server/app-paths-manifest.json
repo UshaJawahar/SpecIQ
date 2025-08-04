@@ -1,8 +1,0 @@
-{
-  "/page": "app/page.js",
-  "/dashboard/page": "app/dashboard/page.js",
-  "/quotations/page": "app/quotations/page.js",
-  "/knowledge-base/page": "app/knowledge-base/page.js",
-  "/tender-analysis/page": "app/tender-analysis/page.js",
-  "/tenders/page": "app/tenders/page.js"
-}
