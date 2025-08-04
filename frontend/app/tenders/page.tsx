@@ -18,8 +18,7 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
-  FileSpreadsheet,
-  FilePdf
+  FileSpreadsheet
 } from 'lucide-react'
 
 // Demo data

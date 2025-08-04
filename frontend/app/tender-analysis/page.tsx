@@ -19,7 +19,6 @@ import {
   ChevronDown,
   ChevronRight,
   FileSpreadsheet,
-  FilePdf,
   Brain,
   Diff
 } from 'lucide-react'
