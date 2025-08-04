@@ -1,0 +1,52 @@
+node_modules
+# Dependency directories
+node_modules/
+.env
+.env.local
+.env.development
+.env.production
+
+# Build output
+.next/
+dist/
+build/
+out/
+coverage/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.swp
+
+.next/
+
+# Misc
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tgz
+
+# Local data
+*.sqlite
+*.db
+*.local
+
+# Test output
+jest-html-reporters-*.html
+
+# Exported files
+*.pdf
+*.xlsx
+*.xls
+
+# Ignore backend uploads if any
+uploads/
+exported/
+tmp/
+temp/
