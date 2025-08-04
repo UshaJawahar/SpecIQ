@@ -116,6 +116,10 @@ export default function KnowledgeBase() {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [showAIQuestions, setShowAIQuestions] = useState(false)
   const [selectedResult, setSelectedResult] = useState<any>(null)
+  const [isFiltering, setIsFiltering] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -135,6 +139,72 @@ export default function KnowledgeBase() {
     // Simulate AI processing the clarifying question
     console.log('AI Question:', question)
     setShowAIQuestions(false)
+  }
+
+  const handleFilter = () => {
+    setIsFiltering(true)
+    setTimeout(() => {
+      setIsFiltering(false)
+      // Simulate filtering
+      console.log('Applied filters')
+    }, 1500)
+  }
+
+  const handleExport = () => {
+    setIsExporting(true)
+    setTimeout(() => {
+      const exportData = {
+        query: searchQuery,
+        results: searchResults,
+        timestamp: new Date().toISOString()
+      }
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `standards-export-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      setIsExporting(false)
+    }, 2000)
+  }
+
+  const handleCopySpecifications = () => {
+    if (selectedResult) {
+      const specs = selectedResult.specifications.join('\n')
+      navigator.clipboard.writeText(specs)
+      console.log('Specifications copied to clipboard')
+    }
+  }
+
+  const handleDownloadPDF = () => {
+    if (selectedResult) {
+      // Simulate PDF download
+      console.log('Downloading PDF for:', selectedResult.standardCode)
+    }
+  }
+
+  const handleAIAnalysis = () => {
+    setIsAnalyzing(true)
+    setTimeout(() => {
+      setIsAnalyzing(false)
+      console.log('AI analysis completed')
+    }, 3000)
+  }
+
+  const handleUpdateDatabase = () => {
+    setIsUpdating(true)
+    setTimeout(() => {
+      setIsUpdating(false)
+      console.log('Database updated with new standards')
+    }, 2500)
+  }
+
+  const handleViewFullSpecification = (result: any) => {
+    // Simulate opening full specification view
+    console.log('Viewing full specification for:', result.standardCode)
+    // In a real app, this would open a modal or navigate to a detail page
   }
 
   return (
@@ -282,13 +352,21 @@ export default function KnowledgeBase() {
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-text-primary">Retrieved Standards</h2>
                     <div className="flex gap-2">
-                      <button className="btn-secondary px-3 py-2 text-sm flex items-center gap-2">
+                      <button 
+                        onClick={handleFilter}
+                        disabled={isFiltering}
+                        className="btn-secondary px-3 py-2 text-sm flex items-center gap-2"
+                      >
                         <Filter className="w-4 h-4" />
-                        Filter
+                        {isFiltering ? 'Filtering...' : 'Filter'}
                       </button>
-                      <button className="btn-secondary px-3 py-2 text-sm flex items-center gap-2">
+                      <button 
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="btn-secondary px-3 py-2 text-sm flex items-center gap-2"
+                      >
                         <Download className="w-4 h-4" />
-                        Export
+                        {isExporting ? 'Exporting...' : 'Export'}
                       </button>
                     </div>
                   </div>
@@ -336,7 +414,10 @@ export default function KnowledgeBase() {
                         <div className="mt-3 pt-3 border-t border-border">
                           <div className="flex items-center justify-between text-xs text-text-muted">
                             <span>Last updated: {result.lastUpdated}</span>
-                            <button className="text-primary hover:text-primary-dark transition-colors">
+                            <button 
+                              onClick={() => handleViewFullSpecification(result)}
+                              className="text-primary hover:text-primary-dark transition-colors"
+                            >
                               View Full Specification
                             </button>
                           </div>
@@ -374,11 +455,17 @@ export default function KnowledgeBase() {
                     </div>
                     
                     <div className="flex gap-2">
-                      <button className="btn-primary px-4 py-2 text-sm flex items-center gap-2">
+                      <button 
+                        onClick={handleCopySpecifications}
+                        className="btn-primary px-4 py-2 text-sm flex items-center gap-2"
+                      >
                         <Copy className="w-4 h-4" />
                         Copy Specifications
                       </button>
-                      <button className="btn-secondary px-4 py-2 text-sm flex items-center gap-2">
+                      <button 
+                        onClick={handleDownloadPDF}
+                        className="btn-secondary px-4 py-2 text-sm flex items-center gap-2"
+                      >
                         <Download className="w-4 h-4" />
                         Download PDF
                       </button>
@@ -392,26 +479,34 @@ export default function KnowledgeBase() {
                 <h3 className="font-semibold text-text-primary mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <motion.button
+                    onClick={handleAIAnalysis}
+                    disabled={isAnalyzing}
                     whileHover={{ scale: 1.02 }}
-                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors"
+                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3">
                       <Brain className="w-5 h-5 text-primary" />
                       <div className="text-left">
-                        <p className="text-sm font-medium text-text-primary">AI Analysis</p>
+                        <p className="text-sm font-medium text-text-primary">
+                          {isAnalyzing ? 'Analyzing...' : 'AI Analysis'}
+                        </p>
                         <p className="text-xs text-text-secondary">Compare standards</p>
                       </div>
                     </div>
                   </motion.button>
 
                   <motion.button
+                    onClick={handleUpdateDatabase}
+                    disabled={isUpdating}
                     whileHover={{ scale: 1.02 }}
-                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors"
+                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3">
                       <Database className="w-5 h-5 text-accent-green" />
                       <div className="text-left">
-                        <p className="text-sm font-medium text-text-primary">Update Database</p>
+                        <p className="text-sm font-medium text-text-primary">
+                          {isUpdating ? 'Updating...' : 'Update Database'}
+                        </p>
                         <p className="text-xs text-text-secondary">Add new standards</p>
                       </div>
                     </div>

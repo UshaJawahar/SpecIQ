@@ -145,6 +145,10 @@ export default function QuotationRetrieval() {
   const [selectedFolder, setSelectedFolder] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<any[]>([])
+  const [isFiltering, setIsFiltering] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
+  const [isBulkExporting, setIsBulkExporting] = useState(false)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   const toggleFolder = (folderId: string) => {
     setExpandedFolders(prev => 
@@ -168,6 +172,74 @@ export default function QuotationRetrieval() {
       ))
       setIsSearching(false)
     }, 2000)
+  }
+
+  const handleFilter = () => {
+    setIsFiltering(true)
+    setTimeout(() => {
+      setIsFiltering(false)
+      console.log('Applied filters to quotations')
+    }, 1500)
+  }
+
+  const handleExport = () => {
+    setIsExporting(true)
+    setTimeout(() => {
+      const exportData = {
+        quotations: searchResults.length > 0 ? searchResults : quotations,
+        timestamp: new Date().toISOString()
+      }
+      
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `quotations-export-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      setIsExporting(false)
+    }, 2000)
+  }
+
+  const handleCopyToProposal = (quotation: any) => {
+    console.log('Copied to proposal:', quotation.serviceItem)
+    // Simulate copying to proposal
+  }
+
+  const handleViewDocument = (quotation: any) => {
+    console.log('Viewing document:', quotation.sourceDocument)
+    // Simulate opening document
+  }
+
+  const handleBulkExport = () => {
+    setIsBulkExporting(true)
+    setTimeout(() => {
+      const allQuotations = quotations.map(q => ({
+        serviceItem: q.serviceItem,
+        partNumber: q.partNumber,
+        latestPrice: q.latestPrice,
+        currency: q.currency,
+        client: q.client,
+        date: q.date
+      }))
+      
+      const blob = new Blob([JSON.stringify(allQuotations, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `bulk-quotations-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      setIsBulkExporting(false)
+    }, 3000)
+  }
+
+  const handleAIAnalysis = () => {
+    setIsAnalyzing(true)
+    setTimeout(() => {
+      setIsAnalyzing(false)
+      console.log('AI price trend analysis completed')
+    }, 4000)
   }
 
   const renderFolder = (item: any, level: number = 0) => {
@@ -317,13 +389,21 @@ export default function QuotationRetrieval() {
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-text-primary">Retrieved Quotations</h2>
                   <div className="flex gap-2">
-                    <button className="btn-secondary px-3 py-2 text-sm flex items-center gap-2">
+                    <button 
+                      onClick={handleFilter}
+                      disabled={isFiltering}
+                      className="btn-secondary px-3 py-2 text-sm flex items-center gap-2"
+                    >
                       <Filter className="w-4 h-4" />
-                      Filter
+                      {isFiltering ? 'Filtering...' : 'Filter'}
                     </button>
-                    <button className="btn-secondary px-3 py-2 text-sm flex items-center gap-2">
+                    <button 
+                      onClick={handleExport}
+                      disabled={isExporting}
+                      className="btn-secondary px-3 py-2 text-sm flex items-center gap-2"
+                    >
                       <Download className="w-4 h-4" />
-                      Export
+                      {isExporting ? 'Exporting...' : 'Export'}
                     </button>
                   </div>
                 </div>
@@ -404,11 +484,17 @@ export default function QuotationRetrieval() {
                       </div>
 
                       <div className="flex flex-col gap-2 ml-4">
-                        <button className="btn-primary px-4 py-2 text-sm flex items-center gap-2">
+                        <button 
+                          onClick={() => handleCopyToProposal(quotation)}
+                          className="btn-primary px-4 py-2 text-sm flex items-center gap-2"
+                        >
                           <Copy className="w-4 h-4" />
                           Copy to Proposal
                         </button>
-                        <button className="btn-secondary px-4 py-2 text-sm flex items-center gap-2">
+                        <button 
+                          onClick={() => handleViewDocument(quotation)}
+                          className="btn-secondary px-4 py-2 text-sm flex items-center gap-2"
+                        >
                           <Eye className="w-4 h-4" />
                           View Document
                         </button>
@@ -428,26 +514,34 @@ export default function QuotationRetrieval() {
                 <h3 className="font-semibold text-text-primary mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <motion.button
+                    onClick={handleBulkExport}
+                    disabled={isBulkExporting}
                     whileHover={{ scale: 1.02 }}
-                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors"
+                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3">
                       <Database className="w-5 h-5 text-primary" />
                       <div className="text-left">
-                        <p className="text-sm font-medium text-text-primary">Bulk Export</p>
+                        <p className="text-sm font-medium text-text-primary">
+                          {isBulkExporting ? 'Exporting...' : 'Bulk Export'}
+                        </p>
                         <p className="text-xs text-text-secondary">Export all quotations</p>
                       </div>
                     </div>
                   </motion.button>
 
                   <motion.button
+                    onClick={handleAIAnalysis}
+                    disabled={isAnalyzing}
                     whileHover={{ scale: 1.02 }}
-                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors"
+                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3">
                       <Brain className="w-5 h-5 text-accent-green" />
                       <div className="text-left">
-                        <p className="text-sm font-medium text-text-primary">AI Analysis</p>
+                        <p className="text-sm font-medium text-text-primary">
+                          {isAnalyzing ? 'Analyzing...' : 'AI Analysis'}
+                        </p>
                         <p className="text-xs text-text-secondary">Price trend analysis</p>
                       </div>
                     </div>

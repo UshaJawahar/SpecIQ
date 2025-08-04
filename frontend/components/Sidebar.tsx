@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'sales-engineer', 'standards-expert', 'electrical-team'] },
@@ -33,10 +34,19 @@ interface SidebarProps {
 export default function Sidebar({ userRole = 'admin' }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   const filteredItems = navigationItems.filter(item => 
     item.roles.includes(userRole)
   )
+
+  const handleLogout = () => {
+    // Simulate logout process
+    toast.success('Logging out...')
+    setTimeout(() => {
+      router.push('/')
+    }, 1000)
+  }
 
   return (
     <motion.div
@@ -112,7 +122,10 @@ export default function Sidebar({ userRole = 'admin' }: SidebarProps) {
 
       {/* Logout */}
       <div className="p-4 border-t border-border">
-        <button className="w-full flex items-center gap-2 text-text-secondary hover:text-accent-orange transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center gap-2 text-text-secondary hover:text-accent-orange transition-colors"
+        >
           <LogOut className="w-4 h-4" />
           {!isCollapsed && <span className="text-sm">Logout</span>}
         </button>

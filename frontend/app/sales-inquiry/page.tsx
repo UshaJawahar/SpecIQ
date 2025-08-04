@@ -90,6 +90,8 @@ export default function SalesInquiry() {
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [selectedProject, setSelectedProject] = useState('')
   const [isRAGProcessing, setIsRAGProcessing] = useState(false)
+  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false)
+  const [isCreatingQuote, setIsCreatingQuote] = useState(false)
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -113,6 +115,54 @@ export default function SalesInquiry() {
     setTimeout(() => {
       setIsRAGProcessing(false)
     }, 2000)
+  }
+
+  const handleRefresh = () => {
+    setIsSearching(true)
+    setTimeout(() => {
+      setSearchResults([...inquiryResults])
+      setIsSearching(false)
+    }, 1500)
+  }
+
+  const handleExport = () => {
+    const exportData = {
+      query: searchQuery,
+      results: searchResults,
+      timestamp: new Date().toISOString()
+    }
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `sales-inquiry-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleGenerateResponse = () => {
+    setIsGeneratingResponse(true)
+    setTimeout(() => {
+      setIsGeneratingResponse(false)
+      // Simulate response generation
+      console.log('AI response generated')
+    }, 3000)
+  }
+
+  const handleCreateQuote = () => {
+    setIsCreatingQuote(true)
+    setTimeout(() => {
+      setIsCreatingQuote(false)
+      // Simulate quote creation
+      console.log('Quote created based on history')
+    }, 2500)
+  }
+
+  const handleViewDetails = (result: any) => {
+    // Simulate opening detailed view
+    console.log('Viewing details for:', result.title)
+    // In a real app, this would open a modal or navigate to a detail page
   }
 
   return (
@@ -222,11 +272,17 @@ export default function SalesInquiry() {
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-text-primary">Retrieved Information</h2>
                     <div className="flex gap-2">
-                      <button className="btn-secondary px-3 py-2 text-sm flex items-center gap-2">
+                      <button 
+                        onClick={handleRefresh}
+                        className="btn-secondary px-3 py-2 text-sm flex items-center gap-2"
+                      >
                         <RefreshCw className="w-4 h-4" />
                         Refresh
                       </button>
-                      <button className="btn-secondary px-3 py-2 text-sm flex items-center gap-2">
+                      <button 
+                        onClick={handleExport}
+                        className="btn-secondary px-3 py-2 text-sm flex items-center gap-2"
+                      >
                         <Download className="w-4 h-4" />
                         Export
                       </button>
@@ -272,7 +328,10 @@ export default function SalesInquiry() {
                         
                         <div className="flex items-center justify-between text-xs text-text-muted">
                           <span>Source: {result.source}</span>
-                          <button className="text-primary hover:text-primary-dark transition-colors">
+                          <button 
+                            onClick={() => handleViewDetails(result)}
+                            className="text-primary hover:text-primary-dark transition-colors"
+                          >
                             View Details
                           </button>
                         </div>
@@ -287,26 +346,34 @@ export default function SalesInquiry() {
                 <h3 className="font-semibold text-text-primary mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <motion.button
+                    onClick={handleGenerateResponse}
+                    disabled={isGeneratingResponse}
                     whileHover={{ scale: 1.02 }}
-                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors"
+                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3">
                       <MessageSquare className="w-5 h-5 text-primary" />
                       <div className="text-left">
-                        <p className="text-sm font-medium text-text-primary">Generate Response</p>
+                        <p className="text-sm font-medium text-text-primary">
+                          {isGeneratingResponse ? 'Generating...' : 'Generate Response'}
+                        </p>
                         <p className="text-xs text-text-secondary">AI-powered reply</p>
                       </div>
                     </div>
                   </motion.button>
 
                   <motion.button
+                    onClick={handleCreateQuote}
+                    disabled={isCreatingQuote}
                     whileHover={{ scale: 1.02 }}
-                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors"
+                    className="p-4 bg-background-tertiary rounded-lg border border-border hover:border-primary/50 transition-colors disabled:opacity-50"
                   >
                     <div className="flex items-center gap-3">
                       <FileText className="w-5 h-5 text-accent-green" />
                       <div className="text-left">
-                        <p className="text-sm font-medium text-text-primary">Create Quote</p>
+                        <p className="text-sm font-medium text-text-primary">
+                          {isCreatingQuote ? 'Creating...' : 'Create Quote'}
+                        </p>
                         <p className="text-xs text-text-secondary">Based on history</p>
                       </div>
                     </div>

@@ -31,6 +31,14 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
+  // Demo credentials for testing
+  const demoCredentials = {
+    'admin': { companyId: 'ADMIN001', password: 'admin123' },
+    'sales-engineer': { companyId: 'SALES001', password: 'sales123' },
+    'standards-expert': { companyId: 'STD001', password: 'standards123' },
+    'electrical-team': { companyId: 'ELEC001', password: 'electrical123' }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -41,29 +49,46 @@ export default function LoginPage() {
 
     setIsLoading(true)
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      toast.success(`Welcome! Logging in as ${selectedRole}`)
-      
-      // Redirect based on role
-      switch (selectedRole) {
-        case 'admin':
-          router.push('/dashboard')
-          break
-        case 'sales-engineer':
-          router.push('/sales-inquiry')
-          break
-        case 'standards-expert':
-          router.push('/knowledge-base')
-          break
-        case 'electrical-team':
-          router.push('/quotation-retrieval')
-          break
-        default:
-          router.push('/dashboard')
-      }
-    }, 1500)
+    // Check demo credentials
+    const demoCred = demoCredentials[selectedRole as keyof typeof demoCredentials]
+    if (demoCred && companyId === demoCred.companyId && password === demoCred.password) {
+      setTimeout(() => {
+        setIsLoading(false)
+        toast.success(`Welcome! Logging in as ${selectedRole}`)
+        
+        // Redirect based on role
+        switch (selectedRole) {
+          case 'admin':
+            router.push('/sales-inquiry')
+            break
+          case 'sales-engineer':
+            router.push('/sales-inquiry')
+            break
+          case 'standards-expert':
+            router.push('/knowledge-base')
+            break
+          case 'electrical-team':
+            router.push('/quotation-retrieval')
+            break
+          default:
+            router.push('/sales-inquiry')
+        }
+      }, 1500)
+    } else {
+      setTimeout(() => {
+        setIsLoading(false)
+        toast.error('Invalid credentials. Please check your Company ID and Password.')
+      }, 1000)
+    }
+  }
+
+  const handleDemoLogin = (role: string) => {
+    const demoCred = demoCredentials[role as keyof typeof demoCredentials]
+    if (demoCred) {
+      setSelectedRole(role)
+      setCompanyId(demoCred.companyId)
+      setPassword(demoCred.password)
+    }
   }
 
   return (
@@ -146,6 +171,7 @@ export default function LoginPage() {
                       key={role.id}
                       type="button"
                       onClick={() => setSelectedRole(role.id)}
+                      onDoubleClick={() => handleDemoLogin(role.id)}
                       className={`p-3 rounded-lg border transition-all duration-200 text-left ${
                         selectedRole === role.id
                           ? 'border-primary bg-primary/10 text-primary'
@@ -157,6 +183,7 @@ export default function LoginPage() {
                       <Icon className="w-5 h-5 mb-2" />
                       <div className="text-sm font-medium">{role.name}</div>
                       <div className="text-xs opacity-75">{role.description}</div>
+                      <div className="text-xs text-text-muted mt-1">Double-click for demo</div>
                     </motion.button>
                   )
                 })}
@@ -191,6 +218,7 @@ export default function LoginPage() {
           className="text-center mt-8 text-text-muted text-sm"
         >
           <p>© 2024 SpecIQ. AI-Powered Enterprise Solutions</p>
+          <p className="mt-2 text-xs">Demo: Double-click any role to auto-fill credentials</p>
         </motion.div>
       </div>
     </div>

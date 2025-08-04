@@ -2,20 +2,108 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Brain, X, MessageCircle, Sparkles } from 'lucide-react'
+import { Brain, X, MessageCircle, Sparkles, Send, Copy, Download, RefreshCw } from 'lucide-react'
+import toast from 'react-hot-toast'
+
+interface Message {
+  id: string
+  type: 'user' | 'ai'
+  content: string
+  timestamp: Date
+}
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (message.trim()) {
-      // Handle AI interaction here
-      console.log('AI Message:', message)
-      setMessage('')
-      setIsOpen(false)
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      type: 'ai',
+      content: 'Hello! I\'m your AI assistant. How can I help you with specifications, standards, or inquiries today?',
+      timestamp: new Date()
+    },
+    {
+      id: '2',
+      type: 'user',
+      content: 'Can you help me find ISO standards for hydraulic valves?',
+      timestamp: new Date()
+    },
+    {
+      id: '3',
+      type: 'ai',
+      content: 'I found several relevant ISO standards for hydraulic valves:\n\n• ISO 1219-1:2012 - Fluid power systems\n• ISO 4411:2008 - Hydraulic fluid power\n• ISO 5598:2008 - Vocabulary\n\nWould you like me to provide detailed specifications for any of these standards?',
+      timestamp: new Date()
     }
+  ])
+  const [isTyping, setIsTyping] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!message.trim()) return
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      type: 'user',
+      content: message,
+      timestamp: new Date()
+    }
+
+    setMessages(prev => [...prev, userMessage])
+    setMessage('')
+    setIsTyping(true)
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponses = [
+        'I\'ve analyzed your query and found relevant information. Let me provide you with the details...',
+        'Based on the specifications you mentioned, here are the applicable standards and requirements...',
+        'I can help you with that! Let me search through our knowledge base for the most relevant information...',
+        'Great question! I\'ve identified several options that match your requirements. Here\'s what I found...',
+        'I\'ve processed your request and found matching specifications. Here are the details...'
+      ]
+      
+      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
+      
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: randomResponse,
+        timestamp: new Date()
+      }
+
+      setMessages(prev => [...prev, aiMessage])
+      setIsTyping(false)
+    }, 2000)
+  }
+
+  const handleCopyMessage = (content: string) => {
+    navigator.clipboard.writeText(content)
+    toast.success('Message copied to clipboard')
+  }
+
+  const handleExportChat = () => {
+    const chatContent = messages.map(msg => 
+      `${msg.type === 'user' ? 'You' : 'AI'}: ${msg.content}`
+    ).join('\n\n')
+    
+    const blob = new Blob([chatContent], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `ai-chat-${new Date().toISOString().split('T')[0]}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Chat exported successfully')
+  }
+
+  const handleClearChat = () => {
+    setMessages([{
+      id: '1',
+      type: 'ai',
+      content: 'Hello! I\'m your AI assistant. How can I help you with specifications, standards, or inquiries today?',
+      timestamp: new Date()
+    }])
+    toast.success('Chat cleared')
   }
 
   return (
@@ -46,7 +134,7 @@ export default function AIAssistant() {
               initial={{ scale: 0.8, opacity: 0, y: 100 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: 100 }}
-              className="bg-background-secondary border border-border rounded-2xl shadow-2xl w-96 max-h-[500px] flex flex-col"
+              className="bg-background-secondary border border-border rounded-2xl shadow-2xl w-96 max-h-[600px] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -60,53 +148,84 @@ export default function AIAssistant() {
                     <p className="text-xs text-text-secondary">Powered by SpecIQ</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="text-text-secondary hover:text-text-primary transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleExportChat}
+                    className="text-text-secondary hover:text-text-primary transition-colors p-1"
+                    title="Export Chat"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleClearChat}
+                    className="text-text-secondary hover:text-text-primary transition-colors p-1"
+                    title="Clear Chat"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-text-secondary hover:text-text-primary transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Chat Messages */}
               <div className="flex-1 p-4 space-y-4 max-h-80 overflow-y-auto">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                    <Brain className="w-4 h-4 text-primary" />
+                {messages.map((msg) => (
+                  <div key={msg.id} className={`flex items-start gap-3 ${msg.type === 'user' ? 'justify-end' : ''}`}>
+                    {msg.type === 'ai' && (
+                      <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                        <Brain className="w-4 h-4 text-primary" />
+                      </div>
+                    )}
+                    
+                    <div className={`rounded-lg p-3 max-w-[80%] ${
+                      msg.type === 'user' 
+                        ? 'bg-primary/20' 
+                        : 'bg-background-tertiary'
+                    }`}>
+                      <p className="text-sm text-text-primary whitespace-pre-line">
+                        {msg.content}
+                      </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-text-muted">
+                          {msg.timestamp.toLocaleTimeString()}
+                        </span>
+                        <button
+                          onClick={() => handleCopyMessage(msg.content)}
+                          className="text-text-muted hover:text-text-primary transition-colors p-1"
+                          title="Copy message"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {msg.type === 'user' && (
+                      <div className="w-8 h-8 bg-accent-green/20 rounded-full flex items-center justify-center">
+                        <MessageCircle className="w-4 h-4 text-accent-green" />
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-background-tertiary rounded-lg p-3 max-w-[80%]">
-                    <p className="text-sm text-text-primary">
-                      Hello! I'm your AI assistant. How can I help you with specifications, standards, or inquiries today?
-                    </p>
+                ))}
+                
+                {isTyping && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                      <Brain className="w-4 h-4 text-primary" />
+                    </div>
+                    <div className="bg-background-tertiary rounded-lg p-3">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                <div className="flex items-start gap-3 justify-end">
-                  <div className="bg-primary/20 rounded-lg p-3 max-w-[80%]">
-                    <p className="text-sm text-text-primary">
-                      Can you help me find ISO standards for hydraulic valves?
-                    </p>
-                  </div>
-                  <div className="w-8 h-8 bg-accent-green/20 rounded-full flex items-center justify-center">
-                    <MessageCircle className="w-4 h-4 text-accent-green" />
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                    <Brain className="w-4 h-4 text-primary" />
-                  </div>
-                  <div className="bg-background-tertiary rounded-lg p-3 max-w-[80%]">
-                    <p className="text-sm text-text-primary">
-                      I found several relevant ISO standards for hydraulic valves:
-                    </p>
-                    <ul className="text-sm text-text-secondary mt-2 space-y-1">
-                      <li>• ISO 1219-1:2012 - Fluid power systems</li>
-                      <li>• ISO 4411:2008 - Hydraulic fluid power</li>
-                      <li>• ISO 5598:2008 - Vocabulary</li>
-                    </ul>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Input Form */}
@@ -118,12 +237,14 @@ export default function AIAssistant() {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Ask me anything..."
                     className="flex-1 glow-input text-sm"
+                    disabled={isTyping}
                   />
                   <button
                     type="submit"
-                    className="bg-primary text-background p-2 rounded-lg hover:bg-primary-dark transition-colors"
+                    disabled={isTyping || !message.trim()}
+                    className="bg-primary text-background p-2 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <Send className="w-4 h-4" />
                   </button>
                 </div>
               </form>

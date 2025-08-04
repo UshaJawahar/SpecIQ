@@ -146,6 +146,8 @@ export default function TenderAnalysis() {
   const [isUploading, setIsUploading] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisComplete, setAnalysisComplete] = useState(false)
+  const [isFiltering, setIsFiltering] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -164,6 +166,39 @@ export default function TenderAnalysis() {
         }, 4000)
       }, 2000)
     }
+  }
+
+  const handleFilter = () => {
+    setIsFiltering(true)
+    setTimeout(() => {
+      setIsFiltering(false)
+      console.log('Applied filters to analysis results')
+    }, 1500)
+  }
+
+  const handleExportReport = () => {
+    setIsExporting(true)
+    setTimeout(() => {
+      const reportData = {
+        analysisResults,
+        summary: {
+          met: 8,
+          exceeds: 3,
+          notMet: 4,
+          total: 15
+        },
+        timestamp: new Date().toISOString()
+      }
+      
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `tender-analysis-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      setIsExporting(false)
+    }, 2000)
   }
 
   const getStatusIcon = (status: string) => {
@@ -295,13 +330,21 @@ export default function TenderAnalysis() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold text-text-primary">Specification Comparison Results</h2>
                   <div className="flex gap-2">
-                    <button className="btn-secondary px-3 py-2 text-sm flex items-center gap-2">
+                    <button 
+                      onClick={handleFilter}
+                      disabled={isFiltering}
+                      className="btn-secondary px-3 py-2 text-sm flex items-center gap-2"
+                    >
                       <Filter className="w-4 h-4" />
-                      Filter
+                      {isFiltering ? 'Filtering...' : 'Filter'}
                     </button>
-                    <button className="btn-secondary px-3 py-2 text-sm flex items-center gap-2">
+                    <button 
+                      onClick={handleExportReport}
+                      disabled={isExporting}
+                      className="btn-secondary px-3 py-2 text-sm flex items-center gap-2"
+                    >
                       <Download className="w-4 h-4" />
-                      Export Report
+                      {isExporting ? 'Exporting...' : 'Export Report'}
                     </button>
                   </div>
                 </div>
