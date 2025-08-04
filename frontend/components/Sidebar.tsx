@@ -1,8 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   LayoutDashboard,
@@ -19,22 +17,21 @@ import {
 import toast from 'react-hot-toast'
 
 const navigationItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'sales-engineer', 'standards-expert', 'electrical-team'] },
-  { name: 'Sales Inquiry', href: '/sales-inquiry', icon: MessageSquare, roles: ['admin', 'sales-engineer'] },
-  { name: 'Knowledge Base', href: '/knowledge-base', icon: BookOpen, roles: ['admin', 'standards-expert'] },
-  { name: 'Tender Analysis', href: '/tender-analysis', icon: FileText, roles: ['admin', 'sales-engineer'] },
-  { name: 'Quotation Retrieval', href: '/quotation-retrieval', icon: DollarSign, roles: ['admin', 'electrical-team'] },
-  { name: 'Settings', href: '/settings', icon: Settings, roles: ['admin'] },
+  { name: 'Dashboard', id: 'dashboard', icon: LayoutDashboard, roles: ['admin', 'sales-engineer', 'standards-expert', 'electrical-team'] },
+  { name: 'Sales Inquiry', id: 'sales-inquiry', icon: MessageSquare, roles: ['admin', 'sales-engineer'] },
+  { name: 'Knowledge Base', id: 'knowledge-base', icon: BookOpen, roles: ['admin', 'standards-expert'] },
+  { name: 'Tender Analysis', id: 'tender-analysis', icon: FileText, roles: ['admin', 'sales-engineer'] },
+  { name: 'Quotation Retrieval', id: 'quotation-retrieval', icon: DollarSign, roles: ['admin', 'electrical-team'] },
+  { name: 'Settings', id: 'settings', icon: Settings, roles: ['admin', 'sales-engineer', 'standards-expert', 'electrical-team'] },
 ]
 
 interface SidebarProps {
   userRole?: string
+  onSectionChange?: (section: string) => void
 }
 
-export default function Sidebar({ userRole = 'admin' }: SidebarProps) {
+export default function Sidebar({ userRole = 'admin', onSectionChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const pathname = usePathname()
-  const router = useRouter()
 
   const filteredItems = navigationItems.filter(item => 
     item.roles.includes(userRole)
@@ -44,8 +41,16 @@ export default function Sidebar({ userRole = 'admin' }: SidebarProps) {
     // Simulate logout process
     toast.success('Logging out...')
     setTimeout(() => {
-      router.push('/')
+      localStorage.removeItem('user')
+      localStorage.removeItem('isLoggedIn')
+      window.location.href = '/'
     }, 1000)
+  }
+
+  const handleSectionClick = (sectionId: string) => {
+    if (onSectionChange) {
+      onSectionChange(sectionId)
+    }
   }
 
   return (
@@ -78,57 +83,70 @@ export default function Sidebar({ userRole = 'admin' }: SidebarProps) {
       <nav className="flex-1 p-4 space-y-2">
         {filteredItems.map((item) => {
           const Icon = item.icon
-          const isActive = pathname === item.href
           
           return (
-            <Link key={item.name} href={item.href}>
-              <motion.div
-                className={`sidebar-item ${isActive ? 'active' : ''}`}
-                whileHover={{ x: 4 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Icon className="w-5 h-5" />
-                {!isCollapsed && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-sm font-medium"
-                  >
-                    {item.name}
-                  </motion.span>
-                )}
-              </motion.div>
-            </Link>
+            <motion.button
+              key={item.id}
+              onClick={() => handleSectionClick(item.id)}
+              className="sidebar-item w-full text-left"
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Icon className="w-5 h-5" />
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-sm font-medium"
+                >
+                  {item.name}
+                </motion.span>
+              )}
+            </motion.button>
           )
         })}
       </nav>
 
-      {/* Collapse Toggle */}
+      {/* Collapse Button */}
       <div className="p-4 border-t border-border">
-        <button
+        <motion.button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="w-full flex items-center justify-center gap-2 text-text-secondary hover:text-primary transition-colors"
+          className="sidebar-item w-full"
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.95 }}
         >
-          {isCollapsed ? (
-            <ChevronRight className="w-4 h-4" />
-          ) : (
-            <>
-              <ChevronLeft className="w-4 h-4" />
-              <span className="text-sm">Collapse</span>
-            </>
+          {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          {!isCollapsed && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-sm font-medium"
+            >
+              Collapse
+            </motion.span>
           )}
-        </button>
+        </motion.button>
       </div>
 
-      {/* Logout */}
+      {/* Logout Button */}
       <div className="p-4 border-t border-border">
-        <button 
+        <motion.button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 text-text-secondary hover:text-accent-orange transition-colors"
+          className="sidebar-item w-full text-red-500 hover:text-red-400"
+          whileHover={{ x: 4 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <LogOut className="w-4 h-4" />
-          {!isCollapsed && <span className="text-sm">Logout</span>}
-        </button>
+          <LogOut className="w-5 h-5" />
+          {!isCollapsed && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-sm font-medium"
+            >
+              Logout
+            </motion.span>
+          )}
+        </motion.button>
       </div>
     </motion.div>
   )

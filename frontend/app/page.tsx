@@ -34,70 +34,56 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!companyId || !password || !selectedRole) {
-      toast.error('Please fill in all fields and select a role')
+    if (!selectedRole) {
+      toast.error('Please select a role to continue')
       return
     }
 
     setIsLoading(true)
     
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          companyId,
-          password,
-          role: selectedRole
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok && data.success) {
-        // Store token in localStorage
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', JSON.stringify(data.user))
-        
-        toast.success(data.message || `Welcome! Logging in as ${selectedRole}`)
-        
-        // Redirect based on role
-        switch (selectedRole) {
-          case 'admin':
-            router.push('/sales-inquiry')
-            break
-          case 'sales-engineer':
-            router.push('/sales-inquiry')
-            break
-          case 'standards-expert':
-            router.push('/knowledge-base')
-            break
-          case 'electrical-team':
-            router.push('/quotation-retrieval')
-            break
-          default:
-            router.push('/sales-inquiry')
-        }
-      } else {
-        toast.error(data.error || 'Login failed. Please try again.')
+    // Simulate loading
+    setTimeout(() => {
+      // Store user info in localStorage for demo
+      const userInfo = {
+        role: selectedRole,
+        companyId: companyId || 'demo-company',
+        name: roles.find(r => r.id === selectedRole)?.name || 'User'
       }
-    } catch (error) {
-      console.error('Login error:', error)
-      toast.error('Network error. Please check your connection.')
-    } finally {
+      
+      localStorage.setItem('user', JSON.stringify(userInfo))
+      localStorage.setItem('isLoggedIn', 'true')
+      
+      toast.success(`Welcome! Logging in as ${userInfo.name}`)
+      
+      // Redirect based on role
+      switch (selectedRole) {
+        case 'admin':
+          router.push('/dashboard')
+          break
+        case 'sales-engineer':
+          router.push('/dashboard')
+          break
+        case 'standards-expert':
+          router.push('/dashboard')
+          break
+        case 'electrical-team':
+          router.push('/dashboard')
+          break
+        default:
+          router.push('/dashboard')
+      }
+      
       setIsLoading(false)
-    }
+    }, 1500)
   }
 
   const handleDemoLogin = (role: string) => {
     // Set demo credentials for the selected role
     const demoCredentials = {
-      'admin': { companyId: 'admin', password: 'admin123' },
-      'sales-engineer': { companyId: 'sales', password: 'sales123' },
-      'standards-expert': { companyId: 'standards', password: 'standards123' },
-      'electrical-team': { companyId: 'electrical', password: 'electrical123' }
+      'admin': { companyId: 'admin-demo', password: 'demo123' },
+      'sales-engineer': { companyId: 'sales-demo', password: 'demo123' },
+      'standards-expert': { companyId: 'standards-demo', password: 'demo123' },
+      'electrical-team': { companyId: 'electrical-demo', password: 'demo123' }
     }
     
     const demoCred = demoCredentials[role as keyof typeof demoCredentials]
@@ -138,7 +124,7 @@ export default function LoginPage() {
             {/* Company ID Input */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-2">
-                Company ID
+                Company ID (Optional)
               </label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
@@ -147,7 +133,7 @@ export default function LoginPage() {
                   value={companyId}
                   onChange={(e) => setCompanyId(e.target.value)}
                   className="glow-input w-full pl-10"
-                  placeholder="Enter your company ID"
+                  placeholder="Enter your company ID (optional)"
                 />
               </div>
             </div>
@@ -155,7 +141,7 @@ export default function LoginPage() {
             {/* Password Input */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-2">
-                Password
+                Password (Optional)
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
@@ -164,7 +150,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="glow-input w-full pl-10 pr-10"
-                  placeholder="Enter your password"
+                  placeholder="Enter your password (optional)"
                 />
                 <button
                   type="button"
@@ -179,7 +165,7 @@ export default function LoginPage() {
             {/* Role Selection */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-3">
-                Select Role
+                Select Role *
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {roles.map((role) => {
@@ -211,10 +197,14 @@ export default function LoginPage() {
             {/* Login Button */}
             <motion.button
               type="submit"
-              disabled={isLoading}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              disabled={isLoading || !selectedRole}
+              className={`w-full flex items-center justify-center gap-2 ${
+                !selectedRole 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'btn-primary'
+              }`}
+              whileHover={selectedRole ? { scale: 1.02 } : {}}
+              whileTap={selectedRole ? { scale: 0.98 } : {}}
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
@@ -236,7 +226,8 @@ export default function LoginPage() {
           className="text-center mt-8 text-text-muted text-sm"
         >
           <p>© 2024 SpecIQ. AI-Powered Enterprise Solutions</p>
-          <p className="mt-2 text-xs">Demo: Double-click any role to auto-fill credentials</p>
+          <p className="mt-2 text-xs">Demo: Double-click any role to auto-fill demo credentials</p>
+          <p className="mt-1 text-xs">Company ID and Password are optional for demo</p>
         </motion.div>
       </div>
     </div>
