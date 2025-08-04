@@ -31,14 +31,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
-  // Demo credentials for testing
-  const demoCredentials = {
-    'admin': { companyId: 'ADMIN001', password: 'admin123' },
-    'sales-engineer': { companyId: 'SALES001', password: 'sales123' },
-    'standards-expert': { companyId: 'STD001', password: 'standards123' },
-    'electrical-team': { companyId: 'ELEC001', password: 'electrical123' }
-  }
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -49,12 +41,27 @@ export default function LoginPage() {
 
     setIsLoading(true)
     
-    // Check demo credentials
-    const demoCred = demoCredentials[selectedRole as keyof typeof demoCredentials]
-    if (demoCred && companyId === demoCred.companyId && password === demoCred.password) {
-      setTimeout(() => {
-        setIsLoading(false)
-        toast.success(`Welcome! Logging in as ${selectedRole}`)
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyId,
+          password,
+          role: selectedRole
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Store token in localStorage
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
+        
+        toast.success(data.message || `Welcome! Logging in as ${selectedRole}`)
         
         // Redirect based on role
         switch (selectedRole) {
@@ -73,21 +80,32 @@ export default function LoginPage() {
           default:
             router.push('/sales-inquiry')
         }
-      }, 1500)
-    } else {
-      setTimeout(() => {
-        setIsLoading(false)
-        toast.error('Invalid credentials. Please check your Company ID and Password.')
-      }, 1000)
+      } else {
+        toast.error(data.error || 'Login failed. Please try again.')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      toast.error('Network error. Please check your connection.')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleDemoLogin = (role: string) => {
+    // Set demo credentials for the selected role
+    const demoCredentials = {
+      'admin': { companyId: 'admin', password: 'admin123' },
+      'sales-engineer': { companyId: 'sales', password: 'sales123' },
+      'standards-expert': { companyId: 'standards', password: 'standards123' },
+      'electrical-team': { companyId: 'electrical', password: 'electrical123' }
+    }
+    
     const demoCred = demoCredentials[role as keyof typeof demoCredentials]
     if (demoCred) {
       setSelectedRole(role)
       setCompanyId(demoCred.companyId)
       setPassword(demoCred.password)
+      toast.success(`Demo credentials loaded for ${role}`)
     }
   }
 

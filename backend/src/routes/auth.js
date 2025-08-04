@@ -11,41 +11,45 @@ const loginSchema = Joi.object({
   role: Joi.string().valid('admin', 'sales-engineer', 'standards-expert', 'electrical-team').required()
 });
 
-// Demo user data (in production, this would come from a database)
-const demoUsers = [
-  {
+// Demo user data for each role
+const demoUsers = {
+  'admin': {
     id: 1,
     companyId: 'admin',
-    password: '$2a$10$demo.hash.for.admin',
+    password: 'admin123',
     role: 'admin',
     name: 'Admin User',
-    email: 'admin@speciq.com'
+    email: 'admin@speciq.com',
+    description: 'Full system access'
   },
-  {
+  'sales-engineer': {
     id: 2,
     companyId: 'sales',
-    password: '$2a$10$demo.hash.for.sales',
+    password: 'sales123',
     role: 'sales-engineer',
     name: 'Sales Engineer',
-    email: 'sales@speciq.com'
+    email: 'sales@speciq.com',
+    description: 'Sales inquiry & tender analysis'
   },
-  {
+  'standards-expert': {
     id: 3,
     companyId: 'standards',
-    password: '$2a$10$demo.hash.for.standards',
+    password: 'standards123',
     role: 'standards-expert',
     name: 'Standards Expert',
-    email: 'standards@speciq.com'
+    email: 'standards@speciq.com',
+    description: 'Knowledge base management'
   },
-  {
+  'electrical-team': {
     id: 4,
     companyId: 'electrical',
-    password: '$2a$10$demo.hash.for.electrical',
+    password: 'electrical123',
     role: 'electrical-team',
     name: 'Electrical Team',
-    email: 'electrical@speciq.com'
+    email: 'electrical@speciq.com',
+    description: 'Quotation retrieval'
   }
-];
+};
 
 // Login endpoint
 router.post('/login', async (req, res) => {
@@ -58,29 +62,27 @@ router.post('/login', async (req, res) => {
 
     const { companyId, password, role } = value;
 
-    // Find user (in production, this would query a database)
-    const user = demoUsers.find(u => u.companyId === companyId && u.role === role);
+    // Get demo user for the selected role
+    const demoUser = demoUsers[role];
     
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    if (!demoUser) {
+      return res.status(401).json({ error: 'Invalid role selected' });
     }
 
-    // In demo mode, accept any password for demo users
-    // In production, you would verify the password hash
-    const isValidPassword = true; // bcrypt.compareSync(password, user.password);
-
-    if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    // For demo purposes, accept any non-empty company ID and password
+    // In production, you would verify against actual user credentials
+    if (!companyId.trim() || !password.trim()) {
+      return res.status(401).json({ error: 'Company ID and Password are required' });
     }
 
     // Generate JWT token
     const token = jwt.sign(
       { 
-        userId: user.id, 
-        companyId: user.companyId, 
-        role: user.role,
-        name: user.name,
-        email: user.email
+        userId: demoUser.id, 
+        companyId: companyId, // Use the provided company ID
+        role: demoUser.role,
+        name: demoUser.name,
+        email: demoUser.email
       },
       process.env.JWT_SECRET || 'demo-secret-key',
       { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
@@ -90,19 +92,31 @@ router.post('/login', async (req, res) => {
       success: true,
       token,
       user: {
-        id: user.id,
-        companyId: user.companyId,
-        role: user.role,
-        name: user.name,
-        email: user.email
+        id: demoUser.id,
+        companyId: companyId, // Use the provided company ID
+        role: demoUser.role,
+        name: demoUser.name,
+        email: demoUser.email,
+        description: demoUser.description
       },
-      message: `Welcome back, ${user.name}!`
+      message: `Welcome back, ${demoUser.name}!`
     });
 
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
+});
+
+// Get available roles endpoint
+router.get('/roles', (req, res) => {
+  const roles = Object.keys(demoUsers).map(role => ({
+    id: role,
+    name: demoUsers[role].name,
+    description: demoUsers[role].description
+  }));
+  
+  res.json({ roles });
 });
 
 // Verify token endpoint
