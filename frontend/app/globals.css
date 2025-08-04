@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-background text-text-primary;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glow-input {
+    @apply border border-border bg-background-secondary text-text-primary px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200;
+    box-shadow: 0 0 0 0 rgba(0, 212, 255, 0);
+  }
+  
+  .glow-input:focus {
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+  }
+  
+  .card {
+    @apply bg-background-secondary border border-border rounded-lg p-6 shadow-card;
+  }
+  
+  .card-hover {
+    @apply card hover:border-primary/50 hover:shadow-glow-blue transition-all duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-primary text-background px-6 py-3 rounded-lg font-medium hover:bg-primary-dark transition-all duration-200 shadow-glow-blue;
+  }
+  
+  .btn-secondary {
+    @apply bg-background-tertiary text-text-primary border border-border px-6 py-3 rounded-lg font-medium hover:border-primary/50 hover:text-primary transition-all duration-200;
+  }
+  
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-tertiary transition-all duration-200 cursor-pointer;
+  }
+  
+  .sidebar-item.active {
+    @apply bg-primary/10 text-primary border-r-2 border-primary;
+  }
+  
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .status-success {
+    @apply bg-accent-green/20 text-accent-green border border-accent-green/30;
+  }
+  
+  .status-warning {
+    @apply bg-accent-orange/20 text-accent-orange border border-accent-orange/30;
+  }
+  
+  .status-info {
+    @apply bg-primary/20 text-primary border border-primary/30;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-accent-green bg-clip-text text-transparent;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+} 
